@@ -4,14 +4,24 @@ venv/
 
 # Secretos — NUNCA commitear
 .env
+.env.*
+!.env.example
 
 # Python
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
+*.egg-info/
+build/
+dist/
 
-# Salida en tiempo de ejecucion
+# Salidas en tiempo de ejecucion
 resultado_estructurado.json
+
+# Caches de herramientas
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.coverage
 
 # Configuracion local del agente
 .kilo/
