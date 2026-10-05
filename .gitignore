@@ -1,0 +1,17 @@
+# Entorno virtual
+.venv/
+venv/
+
+# Secretos — NUNCA commitear
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Salida en tiempo de ejecucion
+resultado_estructurado.json
+
+# Configuracion local del agente
+.kilo/

@@ -1,0 +1,8 @@
+{
+  "cliente": "Juan Pérez",
+  "id_producto": "8841",
+  "monto_reclamado": 45000.0,
+  "motivo_reclamo": "El envío llegó con la caja rota",
+  "prioridad": "Alta",
+  "accion_solicitada": "Devolución del dinero o reemplazo urgente"
+}
