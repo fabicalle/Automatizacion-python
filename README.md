@@ -126,12 +126,12 @@ CI (GitHub Actions) runs the suite on every push and PR
 
 ## Configuration
 
-| Variable          | Default                                       | Purpose                    |
-| ----------------- | --------------------------------------------- | -------------------------- |
-| `OMNI_API_KEY`    | — (required)                                  | Bearer token for Omniroute |
-| `OMNIROUTE_URL`   | `http://localhost:20128/v1/chat/completions` | Server endpoint           |
-| `OMNIROUTE_MODEL` | `auto`                                        | Model or alias (combo routing) |
-| `OMNIROUTE_TIMEOUT` | `120` (seconds)                             | HTTP timeout               |
+| Variable            | Default                                       | Purpose                    |
+| -----------------   | --------------------------------------------- | -------------------------- |
+| `OMNI_API_KEY`      | — (required)                                  | Bearer token for Omniroute |
+| `OMNIROUTE_URL`     | `http://localhost:20128/v1/chat/completions`  | Server endpoint            |
+| `OMNIROUTE_MODEL`   | `auto`                                        | Model or alias (combo routing) |
+| `OMNIROUTE_TIMEOUT` | `120` (seconds)                               | HTTP timeout               |
 
 ## Known limitations
 
