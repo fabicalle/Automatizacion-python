@@ -2,7 +2,7 @@
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![CI](https://github.com/your-username/analizador-notas/actions/workflows/tests.yml/badge.svg)](https://github.com/your-username/analizador-notas/actions)
+[![CI](https://github.com/fabicalle/analizador-notas/actions/workflows/tests.yml/badge.svg)](https://github.com/fabicalle/analizador-notas/actions)
 
 > Extracts structured data from unstructured text notes using a local
 > [Omniroute](https://www.npmjs.com/package/omniroute) server
