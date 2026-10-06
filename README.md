@@ -1,21 +1,38 @@
-# Analizador de Notas — Clean Architecture + LLM
+# Note Analyzer — Clean Architecture + LLM
 
-Mini proyecto en Python que toma una nota de texto libre (por
-ejemplo, una queja de cliente desestructurada), la envía a un
-endpoint local [Omniroute](https://www.npmjs.com/package/omniroute)
-compatible con OpenAI pidiendo **JSON estricto**, valida la
-respuesta con **Pydantic** y guarda el resultado en un JSON.
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![CI](https://github.com/your-username/analizador-notas/actions/workflows/tests.yml/badge.svg)](https://github.com/your-username/analizador-notas/actions)
+
+> Extracts structured data from unstructured text notes using a local
+> [Omniroute](https://www.npmjs.com/package/omniroute) server
+> (OpenAI-compatible), validates the response with **Pydantic**,
+> and persists the result as JSON.
+
+## Highlights
+
+- **Clean Architecture** — domain, application, infrastructure, and
+  interface layers with enforced dependency direction
+- **Strict JSON extraction** — system-prompt driven schema contract
+  with low temperature for deterministic output
+- **Robust transport** — handles both JSON and SSE
+  (`text/event-stream`) responses, explicit UTF-8 decoding,
+  connection retries with backoff
+- **Dependency injection** — the use case depends on the `LlmClient`
+  port, not on HTTP; unit tests run fully offline with a fake
+- **Zero-secret repo** — `.env` and `.env.*` are git-ignored; only
+  `.env.example` is versioned
 
 ## Demo
 
-Entrada (`nota_sucia.txt`):
+Input (`nota_sucia.txt`):
 
 > El cliente Juan Pérez llamó el 12 de Octubre molesto porque el
 > envío del producto #8841 (Teclado Mecánico) llegó con la caja
 > rota. Quiere la devolución de sus $45.000 o un reemplazo urgente.
 > Prioridad alta.
 
-Salida (`resultado_estructurado.json`):
+Output (`resultado_estructurado.json`):
 
 ```json
 {
@@ -28,111 +45,121 @@ Salida (`resultado_estructurado.json`):
 }
 ```
 
-## Arquitectura (Clean Architecture)
+## Architecture
 
 ```
 analizador/
-├── domain/            # Entidades y puertos (cero dependencias externas)
-│   ├── schema.py      #    AnalisisResultado (Pydantic) + reglas
+├── domain/            # Entities and ports (zero external dependencies)
+│   ├── schema.py      #    AnalisisResultado (Pydantic) + business rules
 │   └── ports.py       #    LlmClient, FuenteTexto, DestinoResultado
-├── application/       # Casos de uso (orquestación, sin HTTP)
+├── application/       # Use cases (orchestration, no I/O)
 │   └── analizar_nota.py
-├── infrastructure/    # Adaptadores (implementan los puertos)
-│   ├── omniroute_client.py   # HTTP + parseo SSE/JSON + reintentos
+├── infrastructure/    # Adapters (implement the ports)
+│   ├── omniroute_client.py   # HTTP + SSE/JSON parsing + retries
 │   └── persistencia.py       # ArchivoTexto, TextoDirecto, JsonFile
-└── interface/         # CLI — raíz de composición (inyección de dependencias)
+└── interface/         # CLI — composition root (dependency injection)
     └── cli.py
 ```
 
-Regla de dependencias: `domain ← application ← infrastructure/interface`.
-El caso de uso depende del puerto `LlmClient`, no del cliente HTTP
-real — por eso los tests unitarios corren con un fake, sin red.
+**Dependency rule:** `domain ← application ← infrastructure/interface`.
+`AnalizarNotaUseCase` only knows the `LlmClient` abstraction, so the
+HTTP client, storage, or LLM provider can be swapped without touching
+business logic.
 
-## Requisitos
+## Requirements
 
 - Python 3.10+
-- Un servidor Omniroute corriendo localmente (o cualquier endpoint
-  compatible con OpenAI `/v1/chat/completions`)
+- A local Omniroute server (or any OpenAI-compatible
+  `/v1/chat/completions` endpoint)
 
-## Instalación
+## Installation
 
 ```bash
 python -m venv .venv
-.venv\Scripts\activate        # Windows
-# source .venv/bin/activate   # Linux/macOS
+.venv\Scripts\activate          # Windows
+# source .venv/bin/activate     # Linux/macOS
 pip install -r requirements.txt
-cp .env.example .env          # y editar OMNI_API_KEY
+cp .env.example .env            # then edit OMNI_API_KEY
 ```
 
-## Uso
+## Usage
 
 ```bash
-# Analizar el archivo de ejemplo (default: nota_sucia.txt)
+# Analyze the sample file (default: nota_sucia.txt)
 python main.py
-# o
+# or
 python -m analizador
 
-# Analizar otro archivo
+# Analyze another file
 python main.py otra_nota.txt
 
-# Texto directo por CLI
+# Pass text directly via CLI
 python main.py --texto "El cliente Ana Gomez reclama el producto #123 por $12500..."
 
-# Elegir el archivo de salida
+# Custom output file
 python main.py nota.txt --salida mi_resultado.json
 ```
 
-## Pruebas
+## Testing
 
-El suite tiene tests unitarios (dominio, caso de uso con fake,
-CLI) e integración (cliente Omniroute contra un servidor HTTP
-simulado que imita respuestas SSE y JSON). No requiere Omniroute:
+18 tests — unit (domain rules, use case with a fake `LlmClient`,
+CLI arg parsing) and integration (Omniroute client against a local
+HTTP server that mimics real SSE and JSON responses). No running
+Omniroute required:
 
 ```bash
 python -m unittest discover -s tests -v
 ```
 
-## Auditoría y calidad
+## Quality & security
 
-- `ruff check .` y `ruff format --check .` — lint y formato
-- `mypy analizador` — tipado estático
-- `bandit -r analizador` — seguridad
-- CI en GitHub Actions ejecuta los tests en cada push/PR
-- `.env` y `.env.*` ignorados por git (solo `.env.example` se
-  versiona) — sin riesgo de fuga de API keys
+| Check | Command | Status |
+| ----- | ------- | ------ |
+| Lint & format | `ruff check .` / `ruff format --check .` | clean |
+| Static typing | `mypy analizador` | clean |
+| Security scan | `bandit -r analizador -ll` | 0 issues |
+| Test suite | `python -m unittest discover -s tests` | 18/18 |
+| Secret leakage | `git check-ignore .env` | ignored |
 
-## Configuración (variables de entorno)
+CI (GitHub Actions) runs the suite on every push and PR
+(`.github/workflows/tests.yml`).
 
-| Variable         | Default                                       | Uso                            |
-| ---------------- | --------------------------------------------- | ------------------------------ |
-| `OMNI_API_KEY`   | — (requerida)                                 | Bearer token para Omniroute    |
-| `OMNIROUTE_URL`  | `http://localhost:20128/v1/chat/completions` | Endpoint del servidor          |
-| `OMNIROUTE_MODEL`| `auto`                                        | Modelo o alias (combo routing) |
-| `OMNIROUTE_TIMEOUT` | `120` segundos                             | Timeout HTTP                   |
+## Configuration
 
-## Limitaciones conocidas
+| Variable          | Default                                       | Purpose                    |
+| ----------------- | --------------------------------------------- | -------------------------- |
+| `OMNI_API_KEY`    | — (required)                                  | Bearer token for Omniroute |
+| `OMNIROUTE_URL`   | `http://localhost:20128/v1/chat/completions` | Server endpoint           |
+| `OMNIROUTE_MODEL` | `auto`                                        | Model or alias (combo routing) |
+| `OMNIROUTE_TIMEOUT` | `120` (seconds)                             | HTTP timeout               |
 
-- **Formato de montos**: el modelo puede interpretar de forma
-  ambigua montos con separador de miles latinoamericano
-  (`$12.500`). Para resultados confiables, escribí los montos
-  sin separadores (`$12500`) o con palabras (`12 mil quinientos`).
-- Depende de un servidor Omniroute (o endpoint compatible con
-  OpenAI) corriendo localmente.
+## Known limitations
 
-## Estructura del repo
+- **Amount formats:** the LLM can misparse amounts using the
+  Latin-American thousands separator (`$12.500`). For reliable
+  results, write amounts without separators (`$12500`) or in words
+  (`12 mil quinientos`).
+- Requires a local Omniroute server (or an OpenAI-compatible
+  endpoint) to be running.
+
+## Repository structure
 
 ```
 .
-├── analizador/            # Paquete (Clean Architecture)
+├── analizador/             # Package (Clean Architecture)
 ├── tests/
-│   ├── unit/              # Dominio, caso de uso, CLI
-│   └── integration/       # Cliente Omniroute con mock HTTP
-├── main.py                # Entrada: python main.py
-├── nota_sucia.txt         # Entrada de ejemplo
-├── ejemplo_resultado.json # Salida de ejemplo
-├── pyproject.toml         # Metadata + config ruff/mypy
+│   ├── unit/               # Domain, use case, CLI
+│   └── integration/        # Omniroute client with HTTP mock
+├── main.py                 # Entry point: python main.py
+├── nota_sucia.txt          # Sample input
+├── ejemplo_resultado.json  # Sample output
+├── pyproject.toml          # Metadata + ruff/mypy config
 ├── requirements.txt
-├── .env.example           # Plantilla de configuración
+├── .env.example            # Configuration template
 ├── LICENSE
 └── README.md
 ```
+
+## License
+
+[MIT](LICENSE) © Fabian Calle
